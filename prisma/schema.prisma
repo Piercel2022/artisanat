@@ -1,0 +1,369 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+// Modèle Utilisateur
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  firstName String?
+  lastName  String?
+  phone     String?
+  role      Role     @default(CLIENT)
+  avatar    String?
+  isActive  Boolean  @default(true)
+  
+  // Relations
+  orders    Order[]
+  reviews   Review[]
+  favorites Favorite[]
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
+
+// Énumération des rôles
+enum Role {
+  ADMIN
+  ARTISAN
+  CLIENT
+  MODERATOR
+}
+
+// Modèle Artisan
+model Artisan {
+  id          Int     @id @default(autoincrement())
+  name        String
+  slug        String  @unique
+  bio         String? @db.Text
+  website     String?
+  email       String? @unique
+  phone       String?
+  location    String?
+  address     String?
+  postalCode  String?
+  city        String?
+  region      String?
+  country     String? @default("France")
+  
+  // Informations professionnelles
+  siret       String? @unique
+  businessName String?
+  vatNumber   String?
+  
+  // Réseaux sociaux
+  facebook    String?
+  instagram   String?
+  twitter     String?
+  
+  // Configuration
+  isVerified  Boolean @default(false)
+  isActive    Boolean @default(true)
+  
+  // Relations
+  images      Image[]
+  products    Product[]
+  specialties ArtisanSpecialty[]
+  orders      Order[]
+  
+  // Métadonnées
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("artisans")
+}
+
+// Modèle Catégorie
+model Category {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  description String?   @db.Text
+  icon        String?
+  color       String?
+  isActive    Boolean   @default(true)
+  
+  // Hiérarchie des catégories
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  parentId    Int?
+  children    Category[] @relation("CategoryHierarchy")
+  
+  // Relations
+  products    Product[]
+  specialties Specialty[]
+  
+  // Métadonnées
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  @@map("categories")
+}
+
+// Modèle Spécialité
+model Specialty {
+  id          Int    @id @default(autoincrement())
+  name        String
+  slug        String @unique
+  description String? @db.Text
+  
+  // Relations
+  category    Category @relation(fields: [categoryId], references: [id])
+  categoryId  Int
+  artisans    ArtisanSpecialty[]
+  
+  // Métadonnées
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("specialties")
+}
+
+// Table de liaison Artisan-Spécialité
+model ArtisanSpecialty {
+  artisan     Artisan   @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  artisanId   Int
+  specialty   Specialty @relation(fields: [specialtyId], references: [id], onDelete: Cascade)
+  specialtyId Int
+  
+  @@id([artisanId, specialtyId])
+  @@map("artisan_specialties")
+}
+
+// Modèle Produit
+model Product {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  description String?  @db.Text
+  price       Decimal  @db.Decimal(10,2)
+  
+  // Informations détaillées
+  materials   String?  @db.Text
+  dimensions  String?
+  weight      Float?
+  colors      String[]
+  customizable Boolean @default(false)
+  
+  // Gestion du stock
+  stock       Int?     @default(0)
+  isUnlimited Boolean  @default(false)
+  minOrder    Int?     @default(1)
+  maxOrder    Int?
+  
+  // Configuration
+  isActive    Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  
+  // Relations
+  artisan     Artisan?   @relation(fields: [artisanId], references: [id])
+  artisanId   Int?
+  category    Category?  @relation(fields: [categoryId], references: [id])
+  categoryId  Int?
+  images      Image[]
+  orderItems  OrderItem[]
+  reviews     Review[]
+  favorites   Favorite[]
+  
+  // Métadonnées
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("products")
+}
+
+// Modèle Image
+model Image {
+  id        Int     @id @default(autoincrement())
+  url       String
+  alt       String?
+  caption   String?
+  order     Int?    @default(0)
+  isMain    Boolean @default(false)
+  
+  // Relations
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int?
+  artisan   Artisan? @relation(fields: [artisanId], references: [id], onDelete: Cascade)
+  artisanId Int?
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  
+  @@map("images")
+}
+
+// Modèle Commande
+model Order {
+  id            Int         @id @default(autoincrement())
+  orderNumber   String      @unique
+  status        OrderStatus @default(PENDING)
+  
+  // Informations financières
+  subtotal      Decimal     @db.Decimal(10,2)
+  shippingCost  Decimal     @db.Decimal(10,2) @default(0)
+  taxAmount     Decimal     @db.Decimal(10,2) @default(0)
+  totalAmount   Decimal     @db.Decimal(10,2)
+  
+  // Informations de livraison
+  shippingAddress String?   @db.Text
+  shippingMethod  String?
+  trackingNumber  String?
+  
+  // Informations de facturation
+  billingAddress  String?   @db.Text
+  paymentMethod   String?
+  paymentStatus   PaymentStatus @default(PENDING)
+  
+  // Notes
+  customerNotes   String?   @db.Text
+  adminNotes      String?   @db.Text
+  
+  // Relations
+  user        User        @relation(fields: [userId], references: [id])
+  userId      Int
+  artisan     Artisan?    @relation(fields: [artisanId], references: [id])
+  artisanId   Int?
+  orderItems  OrderItem[]
+  
+  // Métadonnées
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  
+  @@map("orders")
+}
+
+// Énumérations pour les commandes
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_PROGRESS
+  READY
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+// Modèle Article de Commande
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10,2)
+  totalPrice Decimal @db.Decimal(10,2)
+  
+  // Personnalisation
+  customization String? @db.Text
+  
+  // Relations
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderId   Int
+  product   Product @relation(fields: [productId], references: [id])
+  productId Int
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  
+  @@map("order_items")
+}
+
+// Modèle Avis
+model Review {
+  id        Int    @id @default(autoincrement())
+  rating    Int    // Note de 1 à 5
+  title     String?
+  comment   String? @db.Text
+  
+  // Statut de modération
+  isApproved Boolean @default(false)
+  
+  // Relations
+  user      User    @relation(fields: [userId], references: [id])
+  userId    Int
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, productId])
+  @@map("reviews")
+}
+
+// Modèle Favoris
+model Favorite {
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId Int
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  
+  @@id([userId, productId])
+  @@map("favorites")
+}
+
+// Modèle Newsletter
+model Newsletter {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  isActive  Boolean  @default(true)
+  
+  // Préférences
+  categories String[] // IDs des catégories d'intérêt
+  regions    String[] // Régions d'intérêt
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("newsletter")
+}
+
+// Modèle Configuration du Site
+model SiteConfig {
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String @db.Text
+  
+  // Métadonnées
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("site_config")
+}
+
+// Index pour optimiser les performances
+// Les index sont automatiquement créés pour les clés primaires, uniques et étrangères
+// Ajout d'index personnalisés pour les requêtes fréquentes
+
+// Index composites pour les recherches
+// @@index([slug, isActive]) sur Product
+// @@index([location, isActive]) sur Artisan
+// @@index([status, createdAt]) sur Order
