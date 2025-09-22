@@ -38,11 +38,11 @@ REQUIRED SECTIONS:
 
 <!-- PROJECT DESCRIPTION -->
 
-# 📖 [your_project_name] <a name="about-project"></a>
+# 📖 [Artisan Francais] <a name="about-project"></a>
 
 
 
-**[ArtisanatFrancais]** est une plateforme numérique dédiée à la valorisation et à la promotion du savoir-faire artisanal français. Cette solution connecte les artisans locaux avec les consommateurs soucieux d'authenticité et de qualité, tout en préservant les traditions et métiers d'art qui font la richesse du patrimoine français.
+**ArtisanatFrancais** est une plateforme numérique dédiée à la valorisation et à la promotion du savoir-faire artisanal français. Cette solution connecte les artisans locaux avec les consommateurs soucieux d'authenticité et de qualité, tout en préservant les traditions et métiers d'art qui font la richesse du patrimoine français.
 
 ## 🛠 Built With <a name="built-with"></a>
 
