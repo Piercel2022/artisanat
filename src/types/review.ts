@@ -10,6 +10,7 @@ import { User } from "next-auth"
 import { Artisan } from "./artisan"
 import { Order } from "./order"
 import { Product } from "./product"
+import { z } from "zod"
 
 export interface Review {
   id: string
@@ -243,3 +244,26 @@ export interface ReviewModerationQueue {
   traites: number
   signales: number
 }
+
+/**
+ * ===============================
+ * Zod Schema de validation Review
+ * ===============================
+ */
+export const ReviewSchema = z.object({
+  titre: z.string().min(3, "Le titre doit contenir au moins 3 caractères"),
+  commentaire: z.string().min(10, "Le commentaire doit contenir au moins 10 caractères"),
+  note: z.number().int().min(1).max(5),
+  orderId: z.string().uuid("ID de commande invalide"),
+  productId: z.string().uuid("ID produit invalide").optional(),
+  artisanId: z.string().uuid("ID artisan invalide").optional(),
+  notes: z.array(
+    z.object({
+      critere: z.string(),
+      note: z.number().int().min(1).max(5)
+    })
+  ).optional(),
+  photos: z.array(
+    z.any() // On laisse any car l’upload dépend de l’implémentation
+  ).optional()
+})
