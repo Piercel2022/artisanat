@@ -1,146 +1,232 @@
 /**
- * Fichier: src/types/artisan.ts
- * Description: Types et interfaces pour les artisans
- * But: Définir la structure des données des artisans et leurs informations
- * Rôle: Types centraux pour la gestion des profils d'artisans dans l'application
- * Relation: Utilisé dans les pages artisans, l'admin, les API et les composants de profil
+ * FICHIER: src/types/artisan.ts
+ * 
+ * NOM: Types TypeScript pour Artisans
+ * 
+ * DESCRIPTION:
+ * Définitions des types TypeScript pour les artisans, leurs données
+ * et les structures associées (témoignages, créations, etc.)
  */
+import { z } from "zod"
 
-import { Order } from "./order"
-import { Product } from "./product"
-import { Review } from "./review"
-
+// Type principal pour un artisan
 export interface Artisan {
-  id: string
-  slug: string
-  nom: string
-  prenom: string
-  nomAtelier: string
-  email: string
-  telephone?: string
-  bio: string
-  
-  // Adresse et localisation
-  adresse: Adresse
-  
-  // Métier et spécialités
-  metier: string
-  specialites: string[]
-  
-  // Médias
-  avatar?: string
-  photosAtelier: string[]
-  
-  // Réseaux sociaux
-  reseauxSociaux: ReseauxSociaux
-  
-  // Informations professionnelles
-  experience: number // années d'expérience
-  formations: Formation[]
-  certifications: Certification[]
-  
-  // Statut et visibilité
-  estActif: boolean
-  estVerifie: boolean
-  estPremium: boolean
-  
-  // Métadonnées
-  dateCreation: Date
-  dateMiseAJour: Date
-  
-  // Relations
-  produits?: Product[]
-  commandes?: Order[]
-  avis?: Review[]
+  id: string;
+  slug: string;
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  craft: string;
+  city: string;
+  region: string;
+  shortDescription: string;
+  longDescription?: string;
+  yearsExperience: number;
+  profileImage?: string;
+  coverImage?: string;
+  specialties?: string[];
+  certifications?: string[];
+  contactEmail: string;
+  contactPhone?: string;
+  website?: string;
+  socialLinks?: string[];
+  gallery?: string[];
+  testimonials?: Testimonial[];
+  creations?: Creation[];
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface Adresse {
-  rue: string
-  ville: string
-  codePostal: string
-  region: string
-  pays: string
-  coordonnees?: {
-    latitude: number
-    longitude: number
-  }
+// Type pour les témoignages clients
+export interface Testimonial {
+  id: string;
+  artisanSlug: string;
+  clientName: string;
+  clientInitials?: string;
+  rating: number; // 1-5 étoiles
+  content: string;
+  projectType?: string;
+  createdAt: Date;
+  isVerified?: boolean;
 }
 
-export interface ReseauxSociaux {
-  instagram?: string
-  facebook?: string
-  twitter?: string
-  tiktok?: string
-  youtube?: string
-  website?: string
+// Type pour les créations/œuvres d'un artisan
+export interface Creation {
+  id: string;
+  artisanSlug: string;
+  title: string;
+  description?: string;
+  images: string[];
+  category?: string;
+  materials?: string[];
+  dimensions?: {
+    width?: number;
+    height?: number;
+    depth?: number;
+    unit: 'cm' | 'mm' | 'm';
+  };
+  price?: number;
+  isForSale?: boolean;
+  createdAt: Date;
+  completedAt?: Date;
 }
 
-export interface Formation {
-  id: string
-  nom: string
-  etablissement: string
-  anneeObtention: number
-  description?: string
-}
-
-export interface Certification {
-  id: string
-  nom: string
-  organisme: string
-  dateObtention: Date
-  dateExpiration?: Date
-  numeroReference?: string
-}
-
-// Types pour les formulaires et l'administration
-export interface CreateArtisanInput {
-  nom: string
-  prenom: string
-  nomAtelier: string
-  email: string
-  telephone?: string
-  bio: string
-  adresse: Omit<Adresse, 'coordonnees'>
-  metier: string
-  specialites: string[]
-  experience: number
-  reseauxSociaux?: Partial<ReseauxSociaux>
-}
-
-export interface UpdateArtisanInput extends Partial<CreateArtisanInput> {
-  id: string
-}
-
-// Types pour les filtres et recherches
+// Type pour les filtres de recherche d'artisans
 export interface ArtisanFilters {
-  metier?: string
-  region?: string
-  ville?: string
-  specialites?: string[]
-  experience?: {
-    min?: number
-    max?: number
-  }
-  estVerifie?: boolean
-  estPremium?: boolean
+  craft?: string;
+  region?: string;
+  city?: string;
+  specialties?: string[];
+  yearsExperienceMin?: number;
+  yearsExperienceMax?: number;
+  hasCertifications?: boolean;
+  search?: string;
 }
 
-export interface ArtisanSearchParams {
-  query?: string
-  filters?: ArtisanFilters
-  sortBy?: 'nom' | 'experience' | 'dateCreation' | 'ville'
-  sortOrder?: 'asc' | 'desc'
-  page?: number
-  limit?: number
+// Type pour les résultats paginés d'artisans
+export interface PaginatedArtisans {
+  artisans: Artisan[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+  filters: ArtisanFilters;
 }
 
-// Type pour les statistiques d'artisan
+// Type pour les statistiques d'un artisan
 export interface ArtisanStats {
-  totalProduits: number
-  totalCommandes: number
-  moyenneAvis: number
-  totalAvis: number
-  chiffreAffaires?: number
+  totalViews: number;
+  totalContacts: number;
+  averageRating: number;
+  totalTestimonials: number;
+  totalCreations: number;
+  profileCompleteness: number; // Pourcentage de complétude du profil
 }
 
-export type ArtisanStatus = 'actif' | 'inactif' | 'suspendu' | 'en_attente'
+// Type pour les données de contact
+export interface ContactRequest {
+  artisanSlug: string;
+  clientName: string;
+  clientEmail: string;
+  clientPhone?: string;
+  projectType?: string;
+  message: string;
+  budget?: string;
+  timeline?: string;
+  createdAt: Date;
+}
+
+// Type pour les métiers d'artisanat disponibles
+export interface CraftCategory {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  parentCategory?: string;
+  subcategories?: CraftCategory[];
+  artisanCount?: number;
+}
+
+// Type pour les régions avec comptage d'artisans
+export interface Region {
+  id: string;
+  name: string;
+  slug: string;
+  code: string; // Code région INSEE
+  cities: City[];
+  artisanCount: number;
+}
+
+// Type pour les villes
+export interface City {
+  id: string;
+  name: string;
+  slug: string;
+  region: string;
+  postalCode?: string;
+  artisanCount: number;
+}
+
+// Type pour les données d'authentification artisan
+export interface ArtisanAuth {
+  id: string;
+  email: string;
+  role: 'artisan' | 'admin';
+  artisanProfile?: Artisan;
+  isVerified: boolean;
+  lastLogin?: Date;
+  createdAt: Date;
+}
+
+// Type pour les paramètres de recherche avancée
+export interface SearchParams {
+  query?: string;
+  craft?: string;
+  region?: string;
+  city?: string;
+  sortBy?: 'relevance' | 'name' | 'experience' | 'rating' | 'recent';
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+// Type pour les résultats de recherche
+export interface SearchResults {
+  artisans: Artisan[];
+  total: number;
+  facets: {
+    crafts: { name: string; count: number }[];
+    regions: { name: string; count: number }[];
+    cities: { name: string; count: number }[];
+  };
+  suggestions?: string[];
+  searchTime: number; // en millisecondes
+}
+
+// Types pour les formulaires
+export interface ArtisanFormData {
+  name: string;
+  firstName?: string;
+  lastName?: string;
+  craft: string;
+  city: string;
+  region: string;
+  shortDescription: string;
+  longDescription?: string;
+  yearsExperience: number;
+  specialties: string[];
+  contactEmail: string;
+  contactPhone?: string;
+  website?: string;
+  socialLinks: string[];
+}
+
+// Type pour les erreurs API
+export interface ApiError {
+  message: string;
+  code: string;
+  statusCode: number;
+  details?: any;
+}
+
+// Type pour les réponses API standardisées
+export interface ApiResponse<T> {
+  data: T;
+  success: boolean;
+  message?: string;
+  error?: ApiError;
+  timestamp: Date;
+}
+
+// Schéma Zod pour un artisan
+export const ArtisanSchema = z.object({
+  id: z.string().uuid().optional(),
+  name: z.string().min(2, "Le nom doit contenir au moins 2 caractères"),
+  description: z.string().optional(),
+  image: z.string().url().optional(),
+  slug: z.string().optional(),
+  isActive: z.boolean().default(true),
+  categoryIds: z.array(z.string().uuid()).optional()
+})
+
