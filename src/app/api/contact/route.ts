@@ -5,15 +5,11 @@
 // RELATION: Relie les visiteurs aux artisans via un système de messagerie
 // CONTRIBUTION: Facilite la communication et les demandes de devis
 // ====================================================================
+
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-
-// Types pour le contexte de route Next.js
-interface RouteContext<T> {
-  params: Promise<{ id: string }>
-}
 
 // Schema de validation pour les messages de contact
 const ContactMessageSchema = z.object({
@@ -40,7 +36,7 @@ async function rateLimit(options: {
     // Créer ou réinitialiser l'enregistrement
     rateLimitStore.set(key, {
       count: 1,
-      resetTime: now + (options.duration * 1000)
+      resetTime: now + options.duration * 1000
     })
     return true
   }
@@ -74,11 +70,11 @@ async function sendEmail(options: {
 // POST /api/artisans/[id]/contact - Envoyer un message à un artisan
 export async function POST(
   request: NextRequest,
-  context: RouteContext<'/api/[id]/contact'>
+  context: { params: { id: string } }
 ) {
   try {
     // Récupération de l'ID depuis les paramètres
-    const { id } = await context.params
+    const { id } = context.params
 
     // Récupération de l'IP depuis les headers
     const headersList = headers()
@@ -114,7 +110,7 @@ export async function POST(
 
     if (!artisan.acceptMessages) {
       return NextResponse.json(
-        { error: 'Cet artisan n\'accepte pas les messages' },
+        { error: "Cet artisan n'accepte pas les messages" },
         { status: 403 }
       )
     }
@@ -160,11 +156,13 @@ export async function POST(
       }
     })
 
-    return NextResponse.json({
-      message: 'Votre message a été envoyé avec succès',
-      id: message.id
-    }, { status: 201 })
-
+    return NextResponse.json(
+      {
+        message: 'Votre message a été envoyé avec succès',
+        id: message.id
+      },
+      { status: 201 }
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -173,9 +171,9 @@ export async function POST(
       )
     }
 
-    console.error('Erreur lors de l\'envoi du message:', error)
+    console.error("Erreur lors de l'envoi du message:", error)
     return NextResponse.json(
-      { error: 'Erreur serveur lors de l\'envoi du message' },
+      { error: "Erreur serveur lors de l'envoi du message" },
       { status: 500 }
     )
   }
