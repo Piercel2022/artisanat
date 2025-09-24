@@ -26,7 +26,12 @@ model User {
   role      Role     @default(CLIENT)
   avatar    String?
   isActive  Boolean  @default(true)
-  
+  emailVerified  DateTime?
+  image          String?
+  hashedPassword String?   // for credentials provider
+  accounts Account[]
+  sessions Session[]
+
   // Relations
   orders    Order[]
   reviews   Review[]
@@ -37,6 +42,14 @@ model User {
   updatedAt DateTime @updatedAt
   
   @@map("users")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
 }
 
 // Énumération des rôles
@@ -358,6 +371,35 @@ model SiteConfig {
   
   @@map("site_config")
 }
+
+// NextAuth.js required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            Int     // Changed from String to Int
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       Int      // Changed from String to Int
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
 
 // Index pour optimiser les performances
 // Les index sont automatiquement créés pour les clés primaires, uniques et étrangères
