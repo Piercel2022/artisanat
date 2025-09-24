@@ -70,16 +70,16 @@ async function sendEmail(options: {
 // POST /api/artisans/[id]/contact - Envoyer un message à un artisan
 export async function POST(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    // Récupération de l'ID depuis les paramètres
-    const { id } = context.params
+    // Récupération de l'ID depuis les paramètres (maintenant async)
+    const { id } = await context.params
 
     // Récupération de l'IP depuis les headers
-    const headersList = headers()
-    const forwardedFor = (await headersList).get('x-forwarded-for')
-    const realIP = (await headersList).get('x-real-ip')
+    const headersList = await headers()
+    const forwardedFor = headersList.get('x-forwarded-for')
+    const realIP = headersList.get('x-real-ip')
     const clientIP = forwardedFor?.split(',')[0] || realIP || 'anonymous'
 
     // Limitation du taux de requêtes pour éviter le spam
