@@ -67,7 +67,7 @@ export default function ArtisansPage({ searchParams }: ArtisansPageProps) {
             </h1>
             <p className="text-xl text-stone-600 max-w-3xl mx-auto">
               Découvrez les artisans passionnés qui perpétuent les traditions 
-              françaises à travers leurs créations uniques et leur savoir-faire d'exception.
+              françaises à travers leurs créations uniques et leur savoir-faire d&apos;exception.
             </p>
           </div>
         </div>
