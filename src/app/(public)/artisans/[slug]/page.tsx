@@ -39,6 +39,44 @@ import LoadingSkeleton from '@/components/ui/LoadingSkeleton';
 import { getArtisanBySlug, getRelatedArtisans } from '@/lib/api/artisans';
 import { Artisan } from '@/types/artisan';
 
+// Add this to the top of your page.tsx file, after the imports
+
+// Type adapter function
+function adaptArtisanForHeader(apiArtisan: Artisan) {
+  return {
+    ...apiArtisan,
+    specialty: apiArtisan.craft,
+    avatar: apiArtisan.profileImage,
+    location: {
+      city: apiArtisan.city,
+      region: apiArtisan.region,
+      department: apiArtisan.region, // Adjust based on your data
+    },
+    contact: {
+      email: apiArtisan.email || '',
+      phone: apiArtisan.phone || '',
+      website: apiArtisan.website || '',
+    },
+    rating: apiArtisan.rating || 0,
+    // Add any other missing properties with appropriate mappings
+  };
+}
+
+// Then update your return statement in the component:
+return (
+  <div className="min-h-screen bg-stone-50">
+    {/* Use adapted artisan for ArtisanHeader */}
+    <ArtisanHeader artisan={adaptArtisanForHeader(artisan)} />
+
+    <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Use original artisan for other components that expect the API format */}
+      <ArtisanBiography artisan={artisan} />
+      <ArtisanSpecialties artisan={artisan} />
+      <ArtisanGallery artisan={artisan} />
+      {/* ... rest of your components */}
+    </main>
+  </div>
+);
 interface ArtisanProfileProps {
   params: { slug: string };
 }
@@ -176,7 +214,7 @@ export default async function ArtisanProfilePage({ params }: ArtisanProfileProps
             {/* Section témoignages clients */}
             <section id="temoignages">
               <Suspense fallback={<LoadingSkeleton type="testimonials" />}>
-                <ArtisanTestimonials artisanSlug={params.slug} />
+                <ArtisanTestimonials artisanSlug={params.slug} artisanId={''} />
               </Suspense>
             </section>
           </main>

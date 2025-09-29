@@ -11,6 +11,9 @@ import { z } from "zod"
 
 // Type principal pour un artisan
 export interface Artisan {
+  rating: number;
+  phone: string;
+  email: string;
   id: string;
   slug: string;
   name: string;
